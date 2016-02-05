@@ -1,0 +1,86 @@
+set x
+DEBUG=0
+TRUSTED_KEYS_FILE=/etc/yubi_auth
+# This default works, but you really want to use your
+# own ID for greater security
+YUBICO_API_ID="<%= @api_id -%>"
+
+test -f /etc/yubikey_shell && source /etc/yubikey_shell
+
+STD="\\033[0;39m"
+OK="\\033[1;32m[i]$STD"
+ERR="\\033[1;31m[e]$STD"
+
+##################################################
+## Disconnect clients trying to exit the script ##
+##################################################
+trap disconnect INT
+
+disconnect() {
+  sleep 1
+  kill -9 $PPID
+  exit 1
+}
+
+debug() {
+  if test "$DEBUG" = 1 ; then
+    echo -e "$@"
+  fi
+}
+
+if test -z "$USER"
+then
+  debug "$ERR USER environment variable is not set" > /dev/stderr
+  disconnect
+fi
+####################################
+## Get user-trusted yubikeys list ##
+####################################
+if [ ! -f $TRUSTED_KEYS_FILE ]
+then
+  debug "$ERR Unable to find trusted keys list" > /dev/stderr
+  disconnect
+fi
+
+TRUSTED_KEYS=`grep "${USER}:" $TRUSTED_KEYS_FILE | sed -e "s/${USER}://" | sed -e 's/:/\n/g'`
+for k in $TRUSTED_KEYS
+do
+  debug "$OK Possible key '$k'"
+done
+
+#######################################
+## Get the actual OTP                ##
+#######################################
+
+echo -n "Please provide Yubi OTP: "
+read -s OTP
+echo
+KEY_ID=${OTP:0:12}
+#######################################
+## Iterate through trusted keys list ##
+#######################################
+for trusted in ${TRUSTED_KEYS[@]}
+do
+  if test "$KEY_ID" = "$trusted"
+  then
+    debug "$OK Found key in $TRUSTED_KEYS_FILE - validating OTP now ..."
+    debug "https://api.yubico.com/wsapi/verify?id=<%= @api_id -%>&otp=$OTP"
+    if curl -s "https://api.yubico.com/wsapi/verify?id=<%= @api_id -%>&otp=$OTP" | grep "status=OK"
+    then
+      debug "$OK OTP validated"
+      if test -z "$SSH_ORIGINAL_COMMAND"
+      then
+        exec `grep "^$(whoami)" /etc/passwd | cut -d ":" -f 7`
+      else
+    exec "$SSH_ORIGINAL_COMMAND"
+      fi
+      debug "$ERR failed to execute shell / command" > /dev/stderr
+      disconnect
+    else
+      debug "$ERR Unable to validate generated OTP" > /dev/stderr
+      disconnect
+    fi
+  fi
+done
+debug "$ERR Key not trusted" > /dev/stderr
+disconnect

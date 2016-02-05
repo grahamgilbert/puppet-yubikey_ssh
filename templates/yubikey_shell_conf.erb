@@ -1,0 +1,16 @@
+# Configuration for /sbin/yubikey_shell
+
+# Replace XXXX with your 4 digit API key ID as obtained
+# from https://upgrade.yubico.com/getapikey/
+YUBICO_API_ID="<%= @api_id -%>"
+
+# Change to 1 to enable debug logs for troubleshooting login
+DEBUG=0
+
+# To override standard key mapping location. This file
+# should contain 1 or more lines like
+#
+#    USERNAME:YUBI_KEY_ID:YUBI_KEY_ID:...
+#
+# This is the same syntax used for yubico-pam
+#TRUSTED_KEYS_FILE=/etc/yubikey_mappings
