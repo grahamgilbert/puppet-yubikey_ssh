@@ -27,3 +27,5 @@ yubikey::users:
 
 * [stdlib](https://forge.puppetlabs.com/puppetlabs/stdlib)
 * [concat](https://forge.puppetlabs.com/puppetlabs/concat)
+* [herculesteam/augeasproviders_core](https://forge.puppetlabs.com/herculesteam/augeasproviders_core)
+* [herculesteam/augeasproviders_ssh](https://forge.puppetlabs.com/herculesteam/augeasproviders_ssh)

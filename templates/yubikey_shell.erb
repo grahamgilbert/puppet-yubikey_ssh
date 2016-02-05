@@ -65,7 +65,7 @@ do
   then
     debug "$OK Found key in $TRUSTED_KEYS_FILE - validating OTP now ..."
     debug "https://api.yubico.com/wsapi/verify?id=<%= @api_id -%>&otp=$OTP"
-    if curl -s "https://api.yubico.com/wsapi/verify?id=<%= @api_id -%>&otp=$OTP" | grep "status=OK"
+    if curl -s "https://api.yubico.com/wsapi/verify?id=<%= @api_id -%>&otp=$OTP" | grep "status=OK" > /dev/null
     then
       debug "$OK OTP validated"
       if test -z "$SSH_ORIGINAL_COMMAND"
